@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "email-mcp-server": {
+      "type": "stdio",
+      "command": "python",
+      "args": ["${workspaceFolder}/run_mcp.py"],
+      "env": {}
+    }
+  }
+}

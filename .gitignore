@@ -1,0 +1,41 @@
+# ─── Secrets & Credentials ───────────────────────────────
+.env
+credentials/
+Id-Pass/
+*_token.json
+token.json
+ 
+# ─── Python ──────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+env/
+*.egg-info/
+dist/
+build/
+ 
+# ─── Generated files ─────────────────────────────────────
+emails_export_*.xlsx
+*.xlsx
+*.log
+ 
+# ─── IDE & Editor ────────────────────────────────────────
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+ 
+# Keep these vscode files (useful for users)
+!.vscode/mcp.json
+ 
+# ─── AI Tool configs (personal, not for repo) ────────────
+.cursorrules
+.windsurfrules
+.code-review-graph/
+AGENTS.md
+CLAUDE.md
+GEMINI.md

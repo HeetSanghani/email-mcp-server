@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email AI Agent Assistant</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg: #0b0f19;
+            --card: rgba(17, 24, 39, 0.8);
+            --border: rgba(255, 255, 255, 0.08);
+            --blue: #3b82f6;
+            --green: #10b981;
+            --text: #f3f4f6;
+            --muted: #9ca3af;
+            --font: 'Outfit', -apple-system, sans-serif;
+            --surface: rgba(17,24,39,0.8);
+            --input-bg: rgba(15,23,42,0.7);
+        }
+
+        /* ── LIGHT THEME ── */
+        [data-theme="light"] {
+            --bg: #f0f4f8;
+            --card: rgba(255,255,255,0.95);
+            --border: rgba(0,0,0,0.1);
+            --text: #1a202c;
+            --muted: #64748b;
+            --surface: rgba(255,255,255,0.9);
+            --input-bg: rgba(248,250,252,0.9);
+        }
+        [data-theme="light"] body {
+            background-image:
+                radial-gradient(at 0% 0%, rgba(59,130,246,0.06) 0,transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16,185,129,0.05) 0,transparent 50%);
+        }
+        [data-theme="light"] header { background: rgba(255,255,255,0.92); border-bottom-color: rgba(0,0,0,0.08); }
+        [data-theme="light"] .sidebar { background: rgba(248,250,252,0.9); border-right-color: rgba(0,0,0,0.08); }
+        [data-theme="light"] .bubble { background: rgba(255,255,255,0.95); color: #1a202c; }
+        [data-theme="light"] .message.user .bubble { background: #3b82f6; color: #fff; }
+        [data-theme="light"] .input-panel { background: rgba(248,250,252,0.9); border-top-color: rgba(0,0,0,0.08); }
+        [data-theme="light"] .input-wrap { background: rgba(255,255,255,0.95); border-color: rgba(0,0,0,0.12); }
+        [data-theme="light"] .chat-input { color: #1a202c; }
+        [data-theme="light"] .avatar { background: #e2e8f0; color: #475569; }
+        [data-theme="light"] .message.user .avatar { background: #3b82f6; color: #fff; }
+        [data-theme="light"] .sec-title { color: #64748b; }
+        [data-theme="light"] .btn-qa { background: rgba(59,130,246,0.08); color: #1a202c; border-color: rgba(59,130,246,0.15); }
+        [data-theme="light"] .btn-qa:hover { background: rgba(59,130,246,0.15); }
+        [data-theme="light"] .accounts-card { background: rgba(255,255,255,0.8); border-color: rgba(0,0,0,0.1); }
+        [data-theme="light"] .email-table-wrap { border-color: rgba(0,0,0,0.1); }
+        [data-theme="light"] .email-table thead th { background: rgba(59,130,246,0.08); color: #475569; }
+        [data-theme="light"] .email-table tbody tr:hover { background: rgba(59,130,246,0.05); }
+        [data-theme="light"] .email-subject-text { color: #1e293b; }
+        [data-theme="light"] .email-from-name { color: #1e293b; }
+        [data-theme="light"] .email-from-addr { color: #64748b; }
+        [data-theme="light"] .email-viewer { border-color: rgba(0,0,0,0.1); }
+        [data-theme="light"] .email-viewer-body { background: rgba(248,250,252,0.8); color: #334155; }
+        [data-theme="light"] .scroll-btn { background: rgba(255,255,255,0.9); border-color: rgba(0,0,0,0.1); color: #64748b; }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            background-image:
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.1) 0, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(16, 185, 129, 0.08) 0, transparent 50%);
+            color: var(--text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        /* ── CONNECT MODAL ── */
+        #connect-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 100;
+            background: rgba(0, 0, 0, .75);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #connect-modal.hidden {
+            display: none;
+        }
+
+        .modal-card {
+            background: #111827;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 20px;
+            padding: 36px 40px;
+            width: 480px;
+            max-width: 95vw;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, .6);
+        }
+
+        .modal-header {
+            text-align: center;
+        }
+
+        .modal-icon {
+            font-size: 44px;
+            margin-bottom: 12px;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 6px;
+        }
+
+        .modal-sub {
+            font-size: 14px;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        .modal-providers {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn-provider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255, 255, 255, .03);
+            color: var(--text);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all .2s;
+            position: relative;
+        }
+
+        .btn-provider:hover {
+            background: rgba(255, 255, 255, .07);
+            border-color: rgba(255, 255, 255, .18);
+            transform: translateY(-1px);
+        }
+
+        .btn-provider .prov-logo {
+            font-size: 28px;
+        }
+
+        .btn-provider .prov-info {
+            text-align: left;
+            flex: 1;
+        }
+
+        .btn-provider .prov-name {
+            font-size: 15px;
+            font-weight: 700;
+        }
+
+        .btn-provider .prov-desc {
+            font-size: 12px;
+            color: var(--muted);
+            font-weight: 400;
+            margin-top: 2px;
+        }
+
+        .btn-provider .prov-arrow {
+            font-size: 18px;
+            color: var(--muted);
+        }
+
+        .btn-provider.gmail:hover {
+            border-color: rgba(239, 68, 68, .5);
+            background: rgba(239, 68, 68, .05);
+        }
+
+        .btn-provider.outlook:hover {
+            border-color: rgba(59, 130, 246, .5);
+            background: rgba(59, 130, 246, .05);
+        }
+
+        .btn-provider.connected {
+            cursor: default;
+            opacity: .6;
+            pointer-events: none;
+        }
+
+        .btn-provider .conn-tag {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            font-weight: 700;
+            color: #34d399;
+            background: rgba(16, 185, 129, .15);
+            border: 1px solid rgba(16, 185, 129, .3);
+            border-radius: 6px;
+            padding: 2px 8px;
+        }
+
+        .modal-skip {
+            text-align: center;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .modal-skip button {
+            background: none;
+            border: none;
+            color: #60a5fa;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            text-decoration: underline;
+        }
+
+        .modal-skip button:hover {
+            color: #93c5fd;
+        }
+
+        .modal-note {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: rgba(59, 130, 246, .06);
+            border: 1px solid rgba(59, 130, 246, .15);
+            border-radius: 10px;
+            padding: 12px 14px;
+            font-size: 12px;
+            color: #93c5fd;
+            line-height: 1.6;
+        }
+
+        .modal-note .note-icon {
+            flex-shrink: 0;
+            font-size: 15px;
+            margin-top: 1px;
+        }
+
+        /* ── TOAST ── */
+        #toast {
+            position: fixed;
+            bottom: 28px;
+            left: 50%;
+            transform: translateX(-50%) translateY(80px);
+            background: #064e3b;
+            border: 1px solid #34d399;
+            color: #6ee7b7;
+            border-radius: 12px;
+            padding: 12px 22px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 200;
+            transition: transform .35s cubic-bezier(.34, 1.56, .64, 1);
+            white-space: nowrap;
+        }
+
+        #toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ── HEADER ── */
+        header {
+            background: rgba(11, 15, 25, .9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 14px 28px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            z-index: 10;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .logo h1 {
+            font-size: 19px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa, #34d399);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo p {
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .conn-status {
+            display: flex;
+            gap: 12px;
+        }
+
+        .badge {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 9999px;
+            padding: 5px 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            font-size: 13px;
+        }
+
+        .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ef4444;
+            box-shadow: 0 0 6px #ef4444;
+        }
+
+        .dot.on {
+            background: #10b981;
+            box-shadow: 0 0 6px #10b981;
+        }
+
+        .btn-conn {
+            background: linear-gradient(135deg, var(--blue), #1d4ed8);
+            color: #fff;
+            border: none;
+            border-radius: 9999px;
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        /* ── LAYOUT ── */
+        main {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            overflow: hidden;
+        }
+
+        /* ── SIDEBAR ── */
+        .sidebar {
+            border-right: 1px solid var(--border);
+            background: rgba(15, 23, 42, .4);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+        }
+
+        .sec-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .quick-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .btn-qa {
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 10px;
+            padding: 11px 14px;
+            text-align: left;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all .2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-qa:hover {
+            background: rgba(255, 255, 255, .04);
+            border-color: rgba(255, 255, 255, .15);
+            transform: translateY(-1px);
+        }
+
+        .accounts-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .acc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .prov-badge {
+            font-size: 9px;
+            text-transform: uppercase;
+            padding: 2px 7px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+
+        .prov-badge.gmail {
+            background: rgba(239, 68, 68, .15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, .3);
+        }
+
+        .prov-badge.outlook {
+            background: rgba(59, 130, 246, .15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, .3);
+        }
+
+        .btn-revoke {
+            background: none;
+            border: none;
+            color: #ef4444;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-revoke:hover {
+            text-decoration: underline;
+        }
+
+        .btn-manage-accounts {
+            width: 100%;
+            padding: 11px 14px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, rgba(59, 130, 246, .15), rgba(16, 185, 129, .1));
+            border: 1px solid rgba(59, 130, 246, .3);
+            color: #93c5fd;
+            font-family: inherit;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all .2s;
+        }
+
+        .btn-manage-accounts:hover {
+            background: linear-gradient(135deg, rgba(59, 130, 246, .25), rgba(16, 185, 129, .18));
+            transform: translateY(-1px);
+        }
+
+        /* ── CHAT PANEL ── */
+        .chat-panel {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .scroll-nav {
+            position: absolute;
+            right: 18px;
+            bottom: 90px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            z-index: 20;
+        }
+
+        .scroll-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, .85);
+            border: 1px solid rgba(59, 130, 246, .5);
+            color: #fff;
+            font-size: 15px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(8px);
+            transition: all .2s;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, .4);
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .scroll-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .scroll-btn:hover {
+            background: var(--blue);
+            transform: scale(1.08);
+        }
+
+        /* ── MESSAGES ── */
+        .messages-box {
+            flex: 1;
+            padding: 28px 32px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scroll-behavior: smooth;
+        }
+
+        .messages-box::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .messages-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .messages-box::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 3px;
+        }
+
+        .message {
+            display: flex;
+            gap: 12px;
+            animation: fadeUp .3s ease-out;
+        }
+
+        .message.assistant {
+            width: 100%;
+            align-self: stretch;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            max-width: 75%;
+            flex-direction: row-reverse;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 9px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 12px;
+        }
+
+        .message.assistant .avatar {
+            background: rgba(59, 130, 246, .15);
+            border: 1px solid rgba(59, 130, 246, .3);
+            color: #60a5fa;
+        }
+
+        .message.user .avatar {
+            background: rgba(16, 185, 129, .15);
+            border: 1px solid rgba(16, 185, 129, .3);
+            color: #34d399;
+        }
+
+        .bubble {
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 14px 18px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.65;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .message.assistant .bubble {
+            border-top-left-radius: 3px;
+        }
+
+        .message.user .bubble {
+            background: rgba(59, 130, 246, .1);
+            border-color: rgba(59, 130, 246, .2);
+            border-top-right-radius: 3px;
+            flex: none;
+        }
+
+        .bubble p {
+            margin-bottom: 10px;
+        }
+
+        .bubble p:last-child {
+            margin-bottom: 0;
+        }
+
+        .bubble strong {
+            color: #e5e7eb;
+            font-weight: 600;
+        }
+
+        .bubble em {
+            color: #d1d5db;
+        }
+
+        /* Email table */
+        .email-table-wrap {
+            margin-top: 10px;
+            width: 100%;
+            overflow: hidden;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+        }
+
+        .email-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .email-table thead tr {
+            background: rgba(59, 130, 246, .06);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .email-table thead th {
+            padding: 8px 14px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            font-weight: 700;
+            text-align: left;
+        }
+
+        .email-row {
+            border-bottom: 1px solid rgba(255, 255, 255, .04);
+            transition: background .15s;
+            cursor: default;
+        }
+
+        .email-row:last-child {
+            border-bottom: none;
+        }
+
+        .email-row:hover {
+            background: rgba(59, 130, 246, .06);
+        }
+
+        .email-row td {
+            padding: 10px 14px;
+            vertical-align: middle;
+        }
+
+        .email-row .col-num {
+            width: 28px;
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(96, 165, 250, .6);
+            text-align: center;
+        }
+
+        .email-row .col-from {
+            width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .email-from-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .email-from-addr {
+            font-size: 11px;
+            color: #60a5fa;
+            margin-top: 1px;
+        }
+
+        .email-subject-text {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e5e7eb;
+        }
+
+        .email-snippet-text {
+            font-size: 12px;
+            color: var(--muted);
+            margin-left: 6px;
+        }
+
+        .email-row .col-date {
+            width: 130px;
+            font-size: 11px;
+            color: var(--muted);
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .email-id-row td {
+            font-size: 10px;
+            font-family: monospace;
+            color: rgba(156, 163, 175, .4);
+            padding: 2px 14px 8px;
+        }
+
+        .export-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px 10px;
+        }
+
+        .export-bar .result-count {
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .btn-export {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 7px 14px;
+            font-size: 12px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all .2s;
+            box-shadow: 0 2px 8px rgba(22, 163, 74, .25);
+        }
+
+        .btn-export:hover {
+            background: linear-gradient(135deg, #15803d, #166534);
+            transform: translateY(-1px);
+        }
+
+        /* Lists */
+        .msg-numbered-list {
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .msg-list-item {
+            display: flex;
+            gap: 10px;
+            font-size: 14px;
+            align-items: flex-start;
+        }
+
+        .msg-list-num {
+            min-width: 22px;
+            height: 22px;
+            border-radius: 6px;
+            margin-top: 1px;
+            background: rgba(59, 130, 246, .2);
+            color: #60a5fa;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .msg-bullet-list {
+            margin: 10px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .msg-bullet-item {
+            display: flex;
+            gap: 10px;
+            font-size: 14px;
+            align-items: flex-start;
+        }
+
+        .msg-bullet-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #60a5fa;
+            flex-shrink: 0;
+            margin-top: 6px;
+        }
+
+        .bubble code {
+            background: rgba(59, 130, 246, .1);
+            border: 1px solid rgba(59, 130, 246, .2);
+            border-radius: 4px;
+            padding: 1px 5px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #93c5fd;
+        }
+
+        .bubble .msg-heading {
+            font-size: 13px;
+            font-weight: 700;
+            color: #e5e7eb;
+            text-transform: uppercase;
+            letter-spacing: .8px;
+            margin: 14px 0 6px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .bubble .msg-heading:first-child {
+            margin-top: 0;
+        }
+
+        /* Success banner */
+        .success-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(16, 185, 129, .08);
+            border: 1px solid rgba(16, 185, 129, .25);
+            border-radius: 10px;
+            padding: 14px 18px;
+        }
+
+        .success-icon {
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .success-text .success-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #34d399;
+        }
+
+        .success-text .success-body {
+            font-size: 13px;
+            color: #6ee7b7;
+            margin-top: 3px;
+        }
+
+        /* Email viewer */
+        .email-viewer {
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            font-size: 14px;
+        }
+
+        .email-viewer-header {
+            background: rgba(59, 130, 246, .06);
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .email-viewer-subject {
+            font-size: 16px;
+            font-weight: 700;
+            color: #e5e7eb;
+            margin-bottom: 4px;
+        }
+
+        .email-viewer-meta {
+            display: grid;
+            grid-template-columns: 60px 1fr;
+            gap: 3px 10px;
+            font-size: 13px;
+        }
+
+        .email-viewer-meta .meta-key {
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .email-viewer-meta .meta-val {
+            color: #d1d5db;
+        }
+
+        .email-viewer-meta .meta-val.blue {
+            color: #60a5fa;
+        }
+
+        .email-viewer-body {
+            padding: 18px 20px;
+            line-height: 1.8;
+            color: #d1d5db;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 500px;
+            overflow-y: auto;
+            background: rgba(11, 15, 25, .5);
+        }
+
+        .email-viewer-body::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .email-viewer-body::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, .1);
+            border-radius: 2px;
+        }
+
+        /* Loading */
+        .loading-bubble {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 14px 18px;
+        }
+
+        .ld {
+            width: 7px;
+            height: 7px;
+            background: var(--muted);
+            border-radius: 50%;
+            animation: bounce 1.3s infinite ease-in-out both;
+        }
+
+        .ld:nth-child(1) {
+            animation-delay: -.32s;
+        }
+
+        .ld:nth-child(2) {
+            animation-delay: -.16s;
+        }
+
+        @keyframes bounce {
+
+            0%,
+            80%,
+            100% {
+                transform: scale(0)
+            }
+
+            40% {
+                transform: scale(1)
+            }
+        }
+
+        /* Error */
+        .bubble.error {
+            border-color: rgba(239, 68, 68, .3);
+            background: rgba(239, 68, 68, .05);
+        }
+
+        .bubble.error .err-title {
+            color: #f87171;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .bubble.error .err-body {
+            font-size: 13px;
+            color: #fca5a5;
+        }
+
+        /* ── INPUT ── */
+        .input-panel {
+            padding: 18px 28px;
+            background: rgba(11, 15, 25, .7);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .input-wrap {
+            display: flex;
+            gap: 10px;
+            background: rgba(15, 23, 42, .7);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 8px 14px;
+            align-items: flex-end;
+            transition: border-color .2s, box-shadow .2s;
+        }
+
+        .input-wrap:focus-within {
+            border-color: rgba(59, 130, 246, .5);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, .12);
+        }
+
+        .chat-input {
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 14px;
+            outline: none;
+            resize: none;
+            max-height: 120px;
+            min-height: 38px;
+            line-height: 1.5;
+            padding: 4px 0;
+        }
+
+        .btn-send {
+            background: var(--blue);
+            border: none;
+            color: #fff;
+            width: 38px;
+            height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+            transition: background .2s, transform .1s;
+        }
+
+        .btn-send:hover {
+            background: #2563eb;
+        }
+
+        .btn-send:active {
+            transform: scale(.94);
+        }
+
+        .btn-send:disabled {
+            background: rgba(59, 130, 246, .3);
+            cursor: not-allowed;
+        }
+
+        /* Excel export card */
+        .excel-export-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(22, 163, 74, .07);
+            border: 1px solid rgba(22, 163, 74, .25);
+            border-radius: 12px;
+            padding: 16px 18px;
+        }
+        .excel-export-icon { font-size: 32px; flex-shrink: 0; }
+        .excel-export-info { flex: 1; min-width: 0; }
+        .excel-export-title { font-size: 14px; font-weight: 700; color: #4ade80; margin-bottom: 3px; }
+        .excel-export-file  { font-size: 12px; font-family: monospace; color: #6ee7b7; word-break: break-all; }
+        .excel-export-body  { font-size: 13px; color: #d1d5db; margin-top: 6px; line-height: 1.5; }
+        .btn-dl-excel {
+            flex-shrink: 0;
+            display: flex; align-items: center; gap: 6px;
+            background: linear-gradient(135deg, #16a34a, #15803d);
+            color: #fff; border: none; border-radius: 9px;
+            padding: 9px 16px; font-size: 13px; font-weight: 600;
+            font-family: inherit; cursor: pointer; text-decoration: none;
+            transition: all .2s; box-shadow: 0 2px 8px rgba(22,163,74,.3);
+        }
+        .btn-dl-excel:hover { background: linear-gradient(135deg,#15803d,#166534); transform: translateY(-1px); }
+
+        /* Category summary grid */
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .category-chip {
+            background: rgba(59, 130, 246, .07);
+            border: 1px solid rgba(59, 130, 246, .18);
+            border-radius: 10px;
+            padding: 10px 14px;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .category-chip .cat-name { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .8px; }
+        .category-chip .cat-count { font-size: 22px; font-weight: 700; color: #60a5fa; }
+        .category-chip .cat-sub   { font-size: 11px; color: var(--muted); }
+
+        /* ── MIC BUTTON ── */
+        .btn-mic {
+            background: rgba(59, 130, 246, .1);
+            border: 1px solid rgba(59, 130, 246, .2);
+            color: var(--muted);
+            width: 38px; height: 38px;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 15px; flex-shrink: 0;
+            transition: all .2s;
+        }
+        .btn-mic:hover { background: rgba(59,130,246,.2); color: var(--text); }
+        .btn-mic.listening {
+            background: rgba(239, 68, 68, .15);
+            border-color: rgba(239, 68, 68, .4);
+            color: #f87171;
+            animation: pulse-mic 1s infinite;
+        }
+        @keyframes pulse-mic {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,.4); }
+            50%       { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+        }
+
+        /* ── THEME TOGGLE ── */
+        .btn-theme {
+            background: rgba(255,255,255,.06);
+            border: 1px solid var(--border);
+            color: var(--text);
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all .2s;
+            flex-shrink: 0;
+        }
+        .btn-theme:hover { background: rgba(255,255,255,.12); transform: rotate(20deg); }
+        [data-theme="light"] .btn-theme { background: rgba(0,0,0,.05); border-color: rgba(0,0,0,.1); color: #475569; }
+        [data-theme="light"] .btn-theme:hover { background: rgba(0,0,0,.1); }
+
+        /* ── UNREAD BADGE ── */
+        .unread-badge {
+            display: inline-flex;
+            align-items: center; justify-content: center;
+            background: #ef4444;
+            color: #fff;
+            font-size: 9px; font-weight: 700;
+            min-width: 16px; height: 16px;
+            border-radius: 8px;
+            padding: 0 4px;
+            position: absolute;
+            top: -4px; right: -4px;
+            animation: badge-pop .3s cubic-bezier(.34,1.56,.64,1);
+        }
+        @keyframes badge-pop {
+            from { transform: scale(0); }
+            to   { transform: scale(1); }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <!-- ── CONNECT ACCOUNTS MODAL ── -->
+    <div id="connect-modal" class="hidden">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-icon">📧</div>
+                <div class="modal-title">Connect Your Email</div>
+                <div class="modal-sub">Connect Gmail or Outlook to get started.<br>Your credentials are secured via
+                    OAuth — we never store your password.</div>
+            </div>
+            <div class="modal-providers">
+                <a href="/auth/gmail/start" class="btn-provider gmail" id="modal-gmail-btn">
+                    <span class="prov-logo">✉️</span>
+                    <div class="prov-info">
+                        <div class="prov-name">Connect Gmail</div>
+                        <div class="prov-desc">Sign in with your Google account</div>
+                    </div>
+                    <span class="prov-arrow">→</span>
+                </a>
+                <a href="/auth/outlook/start" class="btn-provider outlook" id="modal-outlook-btn">
+                    <span class="prov-logo">📨</span>
+                    <div class="prov-info">
+                        <div class="prov-name">Connect Outlook</div>
+                        <div class="prov-desc">Sign in with your Microsoft account</div>
+                    </div>
+                    <span class="prov-arrow">→</span>
+                </a>
+            </div>
+            <div class="modal-note">
+                <span class="note-icon">🔒</span>
+                <span>One-click setup. You'll be redirected to Google/Microsoft to approve access. We use your
+                    credentials only to read and send emails on your behalf.</span>
+            </div>
+            <div class="modal-skip">
+                <button onclick="closeModal()">Skip for now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── TOAST ── -->
+    <div id="toast">✅ Account connected successfully!</div>
+
+    <!-- ── HEADER ── -->
+    <header>
+        <div class="logo">
+            <span style="font-size:26px">📧</span>
+            <div>
+                <h1>Email AI Agent</h1>
+                <p>Gmail &amp; Outlook Assistant</p>
+            </div>
+        </div>
+        <div class="conn-status">
+            <div class="badge" style="position:relative">
+                <span class="dot" id="gmail-dot"></span>
+                <span>Gmail</span>
+                <span class="unread-badge" id="gmail-badge" style="display:none"></span>
+                <button class="btn-conn" id="gmail-conn" style="display:none"
+                    onclick="openModal('gmail')">Connect</button>
+            </div>
+            <div class="badge" style="position:relative">
+                <span class="dot" id="outlook-dot"></span>
+                <span>Outlook</span>
+                <span class="unread-badge" id="outlook-badge" style="display:none"></span>
+                <button class="btn-conn" id="outlook-conn" style="display:none"
+                    onclick="openModal('outlook')">Connect</button>
+            </div>
+            <button class="btn-theme" id="theme-btn" onclick="toggleTheme()" title="Toggle light/dark mode">☀️</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="sidebar">
+            <div>
+                <h3 class="sec-title">Quick Tasks</h3>
+                <div class="quick-list">
+                    <button class="btn-qa" onclick="qa('List my recent emails')"><span>📥</span> List Recent Emails</button>
+                    <button class="btn-qa" onclick="qa('Search my emails for Google')"><span>🔍</span> Search Google Emails</button>
+                    <button class="btn-qa" onclick="qa('Draft a test reply email')"><span>📝</span> Draft Test Reply</button>
+                    <button class="btn-qa" onclick="qa('Show unread emails')"><span>🔔</span> Unread Emails</button>
+                    <button class="btn-qa" onclick="qa('Categorize my inbox')"><span>🗂️</span> Categorize Inbox</button>
+                    <button class="btn-qa" onclick="qa('Export my recent emails to Excel')"><span>📊</span> Export to Excel</button>
+                </div>
+            </div>
+            <div>
+                <h3 class="sec-title">Connected Accounts</h3>
+                <div class="accounts-card">
+                    <div class="acc-row">
+                        <span class="prov-badge gmail">Gmail</span>
+                        <button class="btn-revoke" onclick="revokeAccess('gmail')" id="gmail-revoke"
+                            style="display:none">Disconnect</button>
+                        <button class="btn-conn" id="gmail-sidebar-conn"
+                            style="display:none;font-size:11px;padding:3px 10px"
+                            onclick="openModal('gmail')">Connect</button>
+                    </div>
+                    <div class="acc-row">
+                        <span class="prov-badge outlook">Outlook</span>
+                        <button class="btn-revoke" onclick="revokeAccess('outlook')" id="outlook-revoke"
+                            style="display:none">Disconnect</button>
+                        <button class="btn-conn" id="outlook-sidebar-conn"
+                            style="display:none;font-size:11px;padding:3px 10px"
+                            onclick="openModal('outlook')">Connect</button>
+                    </div>
+                </div>
+                <button class="btn-manage-accounts" onclick="openModal()" style="margin-top:10px">
+                    🔗 Manage Accounts
+                </button>
+            </div>
+        </div>
+
+        <div class="chat-panel">
+            <div class="scroll-nav">
+                <button class="scroll-btn" id="scroll-top" title="Scroll to top" onclick="scrollToTop()">↑</button>
+                <button class="scroll-btn" id="scroll-bottom" title="Scroll to latest"
+                    onclick="scrollToBottom()">↓</button>
+            </div>
+            <div class="messages-box" id="messages-box">
+                <div class="message assistant">
+                    <div class="avatar">AI</div>
+                    <div class="bubble">
+                        <p>👋 Hello! I'm your <strong>AI Email Assistant</strong>.</p>
+                        <p>I can list, search, read, send, draft, and reply to emails across your <strong>Gmail</strong>
+                            and <strong>Outlook</strong> accounts.</p>
+                        <p style="color:var(--muted);font-size:13px">Try: <em>"Show emails from alice@example.com"</em>
+                            or <em>"List my recent emails"</em></p>
+                    </div>
+                </div>
+            </div>
+            <div class="input-panel">
+                <div class="input-wrap">
+                    <textarea class="chat-input" id="user-input"
+                        placeholder="Ask me to search, list, read, or compose emails… (or click 🎤)" onkeydown="handleKey(event)"
+                        oninput="autoResize(this)"></textarea>
+                    <button class="btn-mic" id="mic-btn" onclick="toggleVoice()" title="Voice input">🎤</button>
+                    <button class="btn-send" id="send-btn" onclick="sendMessage()">➔</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // ── Chat history ─────────────────────────────────────────────────────
+        const history = [
+            { role: 'assistant', content: 'Hello! I am your AI Email Assistant.' }
+        ];
+
+        // ── Auth state ───────────────────────────────────────────────────────
+        // ✅ FIX: Global state variables — required by revokeAccess & sendMessage
+        let _gmailConnected = false;
+        let _outlookConnected = false;
+
+        // ── fetchStatus ──────────────────────────────────────────────────────
+        // ✅ FIX: Updates global state + UI + modal buttons together
+        async function fetchStatus() {
+            try {
+                const d = await (await fetch('/auth/status')).json();
+                _gmailConnected = d.gmail.connected;
+                _outlookConnected = d.outlook.connected;
+                setStatus('gmail', _gmailConnected);
+                setStatus('outlook', _outlookConnected);
+                updateModalButtons();
+            } catch (e) { console.error('fetchStatus error:', e); }
+        }
+
+        // ── setStatus ────────────────────────────────────────────────────────
+        // ✅ FIX: Also updates sidebar connect/disconnect buttons
+        function setStatus(p, on) {
+            document.getElementById(`${p}-dot`).className = 'dot' + (on ? ' on' : '');
+            // Header connect button
+            document.getElementById(`${p}-conn`).style.display = on ? 'none' : 'inline-block';
+            // Sidebar disconnect button
+            const revoke = document.getElementById(`${p}-revoke`);
+            if (revoke) revoke.style.display = on ? 'inline-block' : 'none';
+            // Sidebar connect button
+            const sideConn = document.getElementById(`${p}-sidebar-conn`);
+            if (sideConn) sideConn.style.display = on ? 'none' : 'inline-block';
+        }
+
+        // ── revokeAccess ─────────────────────────────────────────────────────
+        // ✅ FIX: Optimistic UI + DELETE→POST fallback + await + modal on disconnect
+        async function revokeAccess(p) {
+            if (!confirm(`Disconnect ${p.toUpperCase()}?`)) return;
+
+            // Optimistic UI — update immediately, don't wait for server
+            if (p === 'gmail') _gmailConnected = false;
+            else _outlookConnected = false;
+            setStatus(p, false);
+            updateModalButtons();
+
+            try {
+                // Try DELETE first (RESTful standard)
+                let res = await fetch(`/auth/${p}/revoke`, { method: 'DELETE' });
+
+                // ✅ Fallback to POST if server returns 405 Method Not Allowed
+                if (res.status === 405) {
+                    res = await fetch(`/auth/${p}/revoke`, { method: 'POST' });
+                }
+            } catch (e) {
+                console.error('Revoke request failed:', e);
+            }
+
+            // Re-fetch real status from server to confirm
+            await fetchStatus();
+
+            // Show connect modal if nothing is connected anymore
+            if (!_gmailConnected && !_outlookConnected) {
+                setTimeout(() => openModal(), 800);
+            }
+
+            addMessage('assistant', `✅ Your **${p.toUpperCase()}** account has been disconnected successfully.`);
+        }
+
+        // ── Modal ────────────────────────────────────────────────────────────
+        function openModal(provider) {
+            document.getElementById('connect-modal').classList.remove('hidden');
+            if (provider === 'gmail') {
+                document.getElementById('modal-gmail-btn').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            } else if (provider === 'outlook') {
+                document.getElementById('modal-outlook-btn').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('connect-modal').classList.add('hidden');
+        }
+
+        // Close modal when clicking backdrop
+        document.getElementById('connect-modal').addEventListener('click', function (e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ✅ Updates modal provider buttons to show connected/disconnected state
+        function updateModalButtons() {
+            const gmailBtn = document.getElementById('modal-gmail-btn');
+            if (_gmailConnected) {
+                gmailBtn.classList.add('connected');
+                gmailBtn.innerHTML = `<span class="prov-logo">✉️</span><div class="prov-info"><div class="prov-name">Gmail</div><div class="prov-desc">Already connected</div></div><span class="conn-tag">✓ Connected</span>`;
+            } else {
+                gmailBtn.classList.remove('connected');
+                gmailBtn.href = '/auth/gmail/start';
+                gmailBtn.innerHTML = `<span class="prov-logo">✉️</span><div class="prov-info"><div class="prov-name">Connect Gmail</div><div class="prov-desc">Sign in with your Google account</div></div><span class="prov-arrow">→</span>`;
+            }
+
+            const outlookBtn = document.getElementById('modal-outlook-btn');
+            if (_outlookConnected) {
+                outlookBtn.classList.add('connected');
+                outlookBtn.innerHTML = `<span class="prov-logo">📨</span><div class="prov-info"><div class="prov-name">Outlook</div><div class="prov-desc">Already connected</div></div><span class="conn-tag">✓ Connected</span>`;
+            } else {
+                outlookBtn.classList.remove('connected');
+                outlookBtn.href = '/auth/outlook/start';
+                outlookBtn.innerHTML = `<span class="prov-logo">📨</span><div class="prov-info"><div class="prov-name">Connect Outlook</div><div class="prov-desc">Sign in with your Microsoft account</div></div><span class="prov-arrow">→</span>`;
+            }
+        }
+
+        // ── OAuth return handler ─────────────────────────────────────────────
+        // ✅ Detects ?connected=gmail after OAuth redirect, shows toast, cleans URL
+        (function handleOAuthReturn() {
+            const params = new URLSearchParams(window.location.search);
+            const connected = params.get('connected');
+            const error = params.get('error');
+
+            if (connected) {
+                showToast(`✅ ${connected.charAt(0).toUpperCase() + connected.slice(1)} connected successfully!`);
+                window.history.replaceState({}, '', window.location.pathname);
+                fetchStatus().then(() => closeModal());
+                setTimeout(() => {
+                    addMessage('assistant',
+                        `🎉 Your **${connected.toUpperCase()}** account is now connected! You can now ask me to list, search, read, send, or reply to your emails.`
+                    );
+                }, 400);
+            } else if (error) {
+                addMessage('assistant', `⚠️ OAuth failed: ${error}. Please try connecting again.`);
+                window.history.replaceState({}, '', window.location.pathname);
+            }
+        })();
+
+        // ── Toast ────────────────────────────────────────────────────────────
+        function showToast(msg) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3500);
+        }
+
+        // ── Scroll nav ───────────────────────────────────────────────────────
+        const box = document.getElementById('messages-box');
+        const btnTop = document.getElementById('scroll-top');
+        const btnBot = document.getElementById('scroll-bottom');
+
+        box.addEventListener('scroll', () => {
+            const atTop = box.scrollTop < 80;
+            const atBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 80;
+            btnTop.classList.toggle('visible', !atTop);
+            btnBot.classList.toggle('visible', !atBottom);
+        });
+        function scrollToTop() { box.scrollTo({ top: 0, behavior: 'smooth' }); }
+        function scrollToBottom() { box.scrollTo({ top: box.scrollHeight, behavior: 'smooth' }); }
+
+        // ── Message rendering ─────────────────────────────────────────────────
+        function renderContent(text) {
+            const t = text.trim();
+            if (/\d+\.\s*(ID:|Subject:|From:|Date:)/i.test(t)) return renderEmailTable(t);
+            if (/^Subject:/im.test(t) && /^From:/im.test(t) && /^(Body|Content):/im.test(t)) return renderEmailViewer(t);
+            // Detect Excel export success — filename pattern from export_emails_to_excel
+            const xlsxMatch = t.match(/emails_export_[\d_]+\.xlsx/);
+            if (xlsxMatch) return renderExcelExport(t, xlsxMatch[0]);
+            // Detect categorized inbox summary (JSON-like _summary block in text)
+            if (/\bcategor/i.test(t) && /\b(Important|Newsletters|Promotions|Work|Spam)\b/i.test(t)) return renderCategoryResult(t);
+            const successKw = /\b(sent successfully|email sent|draft created|reply sent|disconnected|connected|done|success)/i;
+            if (successKw.test(t) && t.length < 350) return renderSuccess(t);
+            return renderMarkdown(t);
+        }
+
+        const _emailTableData = {};
+        let _tableCounter = 0;
+
+        function renderEmailTable(text) {
+            const tableId = 'etbl-' + (++_tableCounter);
+            const parts = text.split(/\n(?=\d+\.\s)/);
+            const rows = [], dataRows = [], preamble = [];
+
+            for (const part of parts) {
+                const numMatch = part.match(/^(\d+)\.\s*([\s\S]*)/);
+                if (!numMatch) { preamble.push(part.trim()); continue; }
+
+                const num = numMatch[1], body = numMatch[2];
+                const lines = body.split('\n').map(l => l.trim()).filter(Boolean);
+                let subject = '', from = '', date = '', id = '', snippet = '', rawDate = '';
+
+                for (const line of lines) {
+                    const kv = line.match(/^(ID|Subject|From|Date|Snippet)\s*:\s*(.+)/i);
+                    if (kv) {
+                        const key = kv[1].toLowerCase(), val = kv[2].trim();
+                        if (key === 'subject') subject = val;
+                        else if (key === 'from') from = val;
+                        else if (key === 'date') { rawDate = val; date = formatDate(val); }
+                        else if (key === 'id') id = val;
+                        else if (key === 'snippet') snippet = val;
+                    } else if (!subject) {
+                        subject = line.replace(/^[""\u201c\u201d]|[""\u201c\u201d]$/g, '');
+                    }
+                }
+
+                let fromName = '', fromAddr = from;
+                const mFrom = from.match(/^(.+?)\s*<([^>]+)>$/);
+                if (mFrom) { fromName = mFrom[1].trim(); fromAddr = mFrom[2].trim(); }
+
+                dataRows.push({ '#': num, 'Sender Name': fromName, 'Sender Email': fromAddr, 'Subject': subject, 'Date': rawDate || date, 'Email ID': id, 'Snippet': snippet });
+
+                rows.push(`
+                    <tr class="email-row">
+                        <td class="col-num">${num}</td>
+                        <td class="col-from">
+                            ${fromName ? `<div class="email-from-name">${esc(fromName)}</div>` : ''}
+                            <div class="email-from-addr">${esc(fromAddr)}</div>
+                        </td>
+                        <td class="col-body">
+                            <span class="email-subject-text">${esc(subject || '(No Subject)')}</span>
+                            ${snippet ? `<span class="email-snippet-text">— ${esc(snippet)}</span>` : ''}
+                        </td>
+                        <td class="col-date">${esc(date)}</td>
+                    </tr>
+                    ${id ? `<tr class="email-id-row"><td></td><td colspan="3">ID: ${esc(id)}</td></tr>` : ''}
+                `);
+            }
+
+            _emailTableData[tableId] = dataRows;
+            const pre = preamble.join(' ').trim();
+            const count = dataRows.length;
+            return `
+                ${pre ? `<p style="margin-bottom:10px">${esc(pre)}</p>` : ''}
+                <div class="email-table-wrap">
+                    <div class="export-bar">
+                        <span class="result-count">${count} email${count !== 1 ? 's' : ''} found</span>
+                        <button class="btn-export" onclick="exportToExcel('${tableId}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                            </svg>
+                            Download Excel
+                        </button>
+                    </div>
+                    <table class="email-table" id="${tableId}">
+                        <thead><tr><th>#</th><th>From</th><th>Subject</th><th style="text-align:right">Date</th></tr></thead>
+                        <tbody>${rows.join('')}</tbody>
+                    </table>
+                </div>`;
+        }
+
+        function exportToExcel(tableId) {
+            const data = _emailTableData[tableId];
+            if (!data || !data.length) { alert('No email data to export.'); return; }
+            const ws = XLSX.utils.json_to_sheet(data, { header: ['#', 'Sender Name', 'Sender Email', 'Subject', 'Date', 'Email ID', 'Snippet'] });
+            ws['!cols'] = [{ wch: 4 }, { wch: 22 }, { wch: 30 }, { wch: 50 }, { wch: 28 }, { wch: 20 }, { wch: 60 }];
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Emails');
+            const ts = new Date().toISOString().slice(0, 16).replace('T', '_').replace(':', 'h').replace(':', 'm');
+            XLSX.writeFile(wb, `emails_${ts}.xlsx`);
+        }
+
+        function renderEmailViewer(text) {
+            const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+            let subject = '', from = '', to = '', date = '', id = '', body = '';
+            let inBody = false, bodyLines = [];
+            for (const line of lines) {
+                if (inBody) { bodyLines.push(line); continue; }
+                const kv = line.match(/^(Subject|From|To|Date|ID|Body|Content)\s*:\s*(.+)/i);
+                if (!kv) { if (bodyLines.length || body) bodyLines.push(line); continue; }
+                const k = kv[1].toLowerCase(), v = kv[2].trim();
+                if (k === 'subject') subject = v;
+                else if (k === 'from') from = v;
+                else if (k === 'to') to = v;
+                else if (k === 'date') date = formatDate(v);
+                else if (k === 'id') id = v;
+                else if (k === 'body' || k === 'content') { inBody = true; bodyLines.push(v); }
+            }
+            body = bodyLines.join('\n').trim();
+            let fromDisplay = esc(from);
+            const mF = from.match(/^(.+?)\s*<([^>]+)>$/);
+            if (mF) fromDisplay = `<strong>${esc(mF[1].trim())}</strong> &lt;${esc(mF[2].trim())}&gt;`;
+            return `
+                <div class="email-viewer">
+                    <div class="email-viewer-header">
+                        <div class="email-viewer-subject">${esc(subject || '(No Subject)')}</div>
+                        <div class="email-viewer-meta">
+                            <span class="meta-key">From</span><span class="meta-val blue">${fromDisplay}</span>
+                            ${to ? `<span class="meta-key">To</span><span class="meta-val">${esc(to)}</span>` : ''}
+                            ${date ? `<span class="meta-key">Date</span><span class="meta-val">${esc(date)}</span>` : ''}
+                            ${id ? `<span class="meta-key">ID</span><span class="meta-val" style="font-family:monospace;font-size:11px;color:rgba(156,163,175,.6)">${esc(id)}</span>` : ''}
+                        </div>
+                    </div>
+                    ${body ? `<div class="email-viewer-body">${esc(body)}</div>` : ''}
+                </div>`;
+        }
+
+        function renderSuccess(text) {
+            const icons = { sent: '📤', draft: '📝', reply: '↩️', disconnect: '🔌', connect: '🔗', default: '✅' };
+            let icon = icons.default;
+            const tl = text.toLowerCase();
+            if (tl.includes('sent')) icon = icons.sent;
+            if (tl.includes('draft')) icon = icons.draft;
+            if (tl.includes('reply')) icon = icons.reply;
+            if (tl.includes('disconn') || tl.includes('revok')) icon = icons.disconnect;
+            const dot = text.indexOf('.');
+            const title = (dot > 0 && dot < 120) ? text.slice(0, dot + 1).trim() : text.split('\n')[0];
+            const body = text.slice(title.length).trim();
+            return `
+                <div class="success-banner">
+                    <div class="success-icon">${icon}</div>
+                    <div class="success-text">
+                        <div class="success-title">${esc(title)}</div>
+                        ${body ? `<div class="success-body">${esc(body)}</div>` : ''}
+                    </div>
+                </div>`;
+        }
+
+        function renderMarkdown(text) {
+            let safe = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            safe = safe
+                .replace(/`([^`]+)`/g, '<code>$1</code>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>');
+            const lines = safe.split('\n');
+            let out = '', listType = null;
+            const closeList = () => {
+                if (listType === 'num' || listType === 'bullet') out += '</div>';
+                listType = null;
+            };
+            for (const line of lines) {
+                const trimmed = line.trim();
+                if (!trimmed) { closeList(); continue; }
+                const headMatch = trimmed.match(/^(#{1,3})\s+(.+)/);
+                if (headMatch) { closeList(); out += `<div class="msg-heading">${headMatch[2]}</div>`; continue; }
+                const numMatch = trimmed.match(/^(\d+)\.\s+(.+)/);
+                if (numMatch) {
+                    if (listType !== 'num') { closeList(); out += '<div class="msg-numbered-list">'; listType = 'num'; }
+                    out += `<div class="msg-list-item"><span class="msg-list-num">${numMatch[1]}</span><span>${numMatch[2]}</span></div>`;
+                    continue;
+                }
+                const bulMatch = trimmed.match(/^[-*]\s+(.+)/);
+                if (bulMatch) {
+                    if (listType !== 'bullet') { closeList(); out += '<div class="msg-bullet-list">'; listType = 'bullet'; }
+                    out += `<div class="msg-bullet-item"><span class="msg-bullet-dot"></span><span>${bulMatch[1]}</span></div>`;
+                    continue;
+                }
+                closeList();
+                out += `<p>${trimmed}</p>`;
+            }
+            closeList();
+            return out;
+        }
+
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+        function formatDate(raw) {
+            try {
+                const d = new Date(raw);
+                if (isNaN(d)) return raw;
+                return d.toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+            } catch { return raw; }
+        }
+
+        // ── Excel export card ─────────────────────────────────────────────────
+        function renderExcelExport(text, filename) {
+            const dlUrl = `/api/download-excel?filename=${encodeURIComponent(filename)}`;
+            return `
+                <div class="excel-export-card">
+                    <div class="excel-export-icon">📊</div>
+                    <div class="excel-export-info">
+                        <div class="excel-export-title">✅ Excel Export Ready</div>
+                        <div class="excel-export-file">${esc(filename)}</div>
+                        <div class="excel-export-body">${renderMarkdown(text.replace(filename, '').trim())}</div>
+                    </div>
+                    <a href="${dlUrl}" download="${esc(filename)}" class="btn-dl-excel">⬇ Download</a>
+                </div>`;
+        }
+
+        // ── Category summary cards ────────────────────────────────────────────
+        const CAT_ICONS = {
+            'Important':'⭐','Work':'💼','Newsletters':'📰','Promotions':'🏷️',
+            'Spam':'🚫','Social':'👥','Security Alerts':'🔒','Purchases/Orders':'🛒','Uncategorized':'📁'
+        };
+        function renderCategoryResult(text) {
+            // Extract number: category pairs from LLM response
+            const rows = [];
+            const pattern = /([A-Za-z\/\s]+?)\s*[:\-–]?\s*(\d+)\s*email/gi;
+            let m;
+            while ((m = pattern.exec(text)) !== null) {
+                const name = m[1].trim();
+                const count = parseInt(m[2]);
+                if (count >= 0) rows.push({ name, count });
+            }
+            if (!rows.length) return renderMarkdown(text);
+            const chips = rows.map(r => `
+                <div class="category-chip">
+                    <span class="cat-name">${CAT_ICONS[r.name] || '📁'} ${esc(r.name)}</span>
+                    <span class="cat-count">${r.count}</span>
+                    <span class="cat-sub">email${r.count !== 1 ? 's' : ''}</span>
+                </div>`).join('');
+            // Also render any preamble text
+            const intro = text.split(/\n/)[0];
+            return `<p style="margin-bottom:10px">${esc(intro)}</p><div class="category-grid">${chips}</div>`;
+        }
+
+        // ── DOM helpers ───────────────────────────────────────────────────────
+        function addMessage(role, text) {
+            const isUser = role === 'user';
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${role}`;
+            const avatar = document.createElement('div');
+            avatar.className = 'avatar';
+            avatar.textContent = isUser ? 'ME' : 'AI';
+            const bubble = document.createElement('div');
+            bubble.className = 'bubble';
+            if (isUser) bubble.textContent = text;
+            else bubble.innerHTML = renderContent(text);
+            msgDiv.appendChild(avatar);
+            msgDiv.appendChild(bubble);
+            box.appendChild(msgDiv);
+            scrollToBottom();
+            btnTop.classList.toggle('visible', box.scrollHeight > box.clientHeight + 100);
+        }
+
+        function addError(msg) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message assistant';
+            const av = document.createElement('div');
+            av.className = 'avatar'; av.textContent = 'AI';
+            const b = document.createElement('div');
+            b.className = 'bubble error';
+            b.innerHTML = `<div class="err-title">⚠ Something went wrong</div><div class="err-body">${esc(msg)}</div>`;
+            msgDiv.appendChild(av); msgDiv.appendChild(b);
+            box.appendChild(msgDiv); scrollToBottom();
+        }
+
+        function addLoading() {
+            const d = document.createElement('div');
+            d.className = 'message assistant'; d.id = 'loading-msg';
+            const av = document.createElement('div'); av.className = 'avatar'; av.textContent = 'AI';
+            const b = document.createElement('div'); b.className = 'loading-bubble';
+            b.innerHTML = '<span class="ld"></span><span class="ld"></span><span class="ld"></span>';
+            d.appendChild(av); d.appendChild(b);
+            box.appendChild(d); scrollToBottom();
+        }
+        function removeLoading() { document.getElementById('loading-msg')?.remove(); }
+
+        // ── sendMessage ───────────────────────────────────────────────────────
+        // ✅ FIX: Uses _gmailConnected/_outlookConnected globals for guard check
+        async function sendMessage() {
+            const inp = document.getElementById('user-input');
+            const text = inp.value.trim();
+            if (!text) return;
+
+            // Guard: prompt to connect if no account connected
+            if (!_gmailConnected && !_outlookConnected) {
+                openModal();
+                addMessage('assistant', '⚠️ Please connect a Gmail or Outlook account first so I can access your emails.');
+                return;
+            }
+
+            inp.value = ''; autoResize(inp);
+            document.getElementById('send-btn').disabled = true;
+
+            addMessage('user', text);
+            history.push({ role: 'user', content: text });
+            addLoading();
+
+            try {
+                // Keep only last 16 messages to avoid token overflow on Groq
+                const trimmedHistory = history.slice(-16);
+                const res = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ messages: trimmedHistory })
+                });
+                const data = await res.json();
+                removeLoading();
+                if (data.error) { addError(data.error); }
+                else {
+                    addMessage('assistant', data.response);
+                    history.push({ role: 'assistant', content: data.response });
+                }
+            } catch (e) {
+                removeLoading();
+                addError('Could not reach the server. Please check your connection.');
+            } finally {
+                document.getElementById('send-btn').disabled = false;
+                inp.focus();
+            }
+        }
+
+        function qa(text) {
+            document.getElementById('user-input').value = text;
+            sendMessage();
+        }
+        function handleKey(e) {
+            if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+        }
+        function autoResize(el) {
+            el.style.height = 'auto';
+            el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+        }
+
+        // ── Init ──────────────────────────────────────────────────────────────
+        fetchStatus().then(() => {
+            // Show modal on first load if nothing is connected
+            if (!_gmailConnected && !_outlookConnected) {
+                setTimeout(() => openModal(), 600);
+            }
+        });
+
+        // ── Theme Toggle ─────────────────────────────────────────────────────
+        function toggleTheme() {
+            const root = document.documentElement;
+            const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            document.getElementById('theme-btn').textContent = next === 'dark' ? '☀️' : '🌙';
+        }
+        // Restore saved theme on load
+        (function () {
+            const saved = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', saved);
+            document.getElementById('theme-btn').textContent = saved === 'dark' ? '☀️' : '🌙';
+        })();
+
+        // ── Voice Input ──────────────────────────────────────────────────────
+        let _recognition = null;
+        let _listening   = false;
+
+        function toggleVoice() {
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SR) {
+                showToast('⚠️ Voice input not supported. Use Chrome or Edge.');
+                return;
+            }
+            if (_listening) {
+                _recognition && _recognition.stop();
+                return;
+            }
+            _recognition = new SR();
+            _recognition.lang = 'en-US';
+            _recognition.interimResults = false;
+            _recognition.maxAlternatives = 1;
+            _recognition.onstart = () => {
+                _listening = true;
+                document.getElementById('mic-btn').classList.add('listening');
+            };
+            _recognition.onresult = (e) => {
+                const transcript = e.results[0][0].transcript;
+                const inp = document.getElementById('user-input');
+                inp.value = transcript;
+                autoResize(inp);
+                inp.focus();
+                // Auto-send after 800ms if user doesn't edit
+                setTimeout(() => { if (inp.value === transcript) sendMessage(); }, 800);
+            };
+            _recognition.onend = () => {
+                _listening = false;
+                document.getElementById('mic-btn').classList.remove('listening');
+            };
+            _recognition.onerror = () => {
+                _listening = false;
+                document.getElementById('mic-btn').classList.remove('listening');
+            };
+            _recognition.start();
+        }
+
+        // ── Notification Badge (unread count) ────────────────────────────────
+        async function fetchUnreadCount() {
+            try {
+                const d = await (await fetch('/api/unread-count')).json();
+                setUnreadBadge('gmail',   d.gmail   || 0);
+                setUnreadBadge('outlook', d.outlook || 0);
+            } catch (e) { /* silent fail */ }
+        }
+        function setUnreadBadge(provider, count) {
+            const el = document.getElementById(`${provider}-badge`);
+            if (!el) return;
+            if (count > 0) {
+                el.textContent = count > 99 ? '99+' : count;
+                el.style.display = 'inline-flex';
+            } else {
+                el.style.display = 'none';
+            }
+        }
+        // Poll immediately + every 5 minutes
+        fetchUnreadCount();
+        setInterval(fetchUnreadCount, 5 * 60 * 1000);
+    </script>
+</body>
+
+</html>
