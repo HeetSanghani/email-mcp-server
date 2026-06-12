@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "email-mcp-server": {
+      "command": "/home/heet/Documents/Tarun Sir/email-mcp-server/venv/bin/python",
+      "args": [
+        "/home/heet/Documents/Tarun Sir/email-mcp-server/run_mcp.py"
+      ],
+      "env": {},
+      "disabled": false,
+      "alwaysAllow": []
+    }
+  }
+}
